@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import pandas as pd
 from PIL import Image
 import io
@@ -12,40 +12,51 @@ st.write("Sube las capturas de tu ruta y obtén el archivo CSV listo para import
 
 api_key = st.text_input("Ingresa tu API Key de Google Gemini", type="password")
 
-if api_key:
-    genai.configure(api_key=api_key)
-
-# Usamos el modelo actual compatible con la API vigente
-model = genai.GenerativeModel('gemini-2.5-flash')
-
 uploaded_files = st.file_uploader("Sube las capturas (JPG/PNG)", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-if uploaded_files and st.button("Generar CSV"):
-    with st.spinner("Procesando imágenes..."):
-        prompt = """
-        Extrae las direcciones y el número de paquete de las imágenes de la ruta.
-        Devuelve los datos ESTRICTAMENTE en este formato CSV:
-        
-        Address,City,Note
-        [Direccion], La Florida, Santiago, Chile, [Numero de paquete]
-        """
-        
-        image_parts = []
-        for uploaded_file in uploaded_files:
-            bytes_data = uploaded_file.getvalue()
-            image_parts.append({"mime_type": uploaded_file.type, "data": bytes_data})
-        
-        response = model.generate_content([prompt, *image_parts])
-        
-        fecha_actual = datetime.now().strftime("%Y-%m-%d")
-        nombre_archivo = f"ruta_circuit_{fecha_actual}.csv"
-        
-        st.subheader("Resultado:")
-        st.code(response.text, language="csv")
-        
-        st.download_button(
-            label="Descargar CSV para Circuit",
-            data=response.text,
-            file_name=nombre_archivo,
-            mime="text/csv"
-        )
+if api_key and uploaded_files:
+    if st.button("Generar CSV"):
+        with st.spinner("Procesando imágenes..."):
+            try:
+                # Inicializar el cliente con la nueva SDK unificada
+                client = genai.Client(api_key=api_key)
+                
+                prompt = """
+                Extrae las direcciones y el número de paquete de las imágenes de la ruta.
+                Devuelve los datos ESTRICTAMENTE en este formato CSV:
+                
+                Address,City,Note
+                [Direccion], La Florida, Santiago, Chile, [Numero de paquete]
+                """
+                
+                # Preparar los contenidos compatibles con la nueva API
+                contents = [prompt]
+                for uploaded_file in uploaded_files:
+                    bytes_data = uploaded_file.getvalue()
+                    contents.append(
+                        genai.types.Part.from_bytes(
+                            data=bytes_data,
+                            mime_type=uploaded_file.type
+                        )
+                    )
+                
+                # Llamada al modelo vigente usando gemini-2.5-flash
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=contents,
+                )
+                
+                fecha_actual = datetime.now().strftime("%Y-%m-%d")
+                nombre_archivo = f"ruta_circuit_{fecha_actual}.csv"
+                
+                st.subheader("Resultado:")
+                st.code(response.text, language="csv")
+                
+                st.download_button(
+                    label="Descargar CSV para Circuit",
+                    data=response.text,
+                    file_name=nombre_archivo,
+                    mime="text/csv"
+                )
+            except Exception as e:
+                st.error(f"Ocurrió un error al procesar la solicitud: {e}")
