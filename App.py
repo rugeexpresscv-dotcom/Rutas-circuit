@@ -40,9 +40,9 @@ if api_key and uploaded_files:
                         )
                     )
                 
-                # Llamada al modelo vigente usando gemini-2.5-flash
+                # Llamada al modelo vigente usando gemini-2.0-flash
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-2.0-flash',
                     contents=contents,
                 )
                 
