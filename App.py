@@ -15,8 +15,8 @@ api_key = st.text_input("Ingresa tu API Key de Google Gemini", type="password")
 if api_key:
     genai.configure(api_key=api_key)
 
-# Definimos el modelo fuera de condiciones para asegurar disponibilidad global
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Usamos el modelo actual compatible con la API vigente
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 uploaded_files = st.file_uploader("Sube las capturas (JPG/PNG)", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
@@ -37,7 +37,6 @@ if uploaded_files and st.button("Generar CSV"):
         
         response = model.generate_content([prompt, *image_parts])
         
-        # Generar nombre del archivo con fecha actual
         fecha_actual = datetime.now().strftime("%Y-%m-%d")
         nombre_archivo = f"ruta_circuit_{fecha_actual}.csv"
         
