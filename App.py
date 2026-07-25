@@ -14,7 +14,7 @@ api_key = st.text_input("Ingresa tu API Key de Google Gemini:", type="password")
 
 if api_key:
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    models = genai.GenerativeModel('gemini-1.5-flash')
     
     uploaded_files = st.file_uploader("Sube las capturas (JPG/PNG)", accept_multiple_files=True, type=['jpg', 'jpeg', 'png'])
     
